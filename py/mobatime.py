@@ -1,51 +1,93 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Feb  9 08:44:43 2026
+Synchronisation d'une horloge Mobatime BU190(t) S 230 avec un Raspberry PI
 
+Created on Mon Feb  9 08:44:43 2026
 @author: christophe
 """
 
 import time
 import datetime
 import serial
+import logging
+import sys
 
-ser = serial.Serial(
-        port='/dev/ttyAMA0', # /dev/ttyAMA0 ou /dev/ttyAMA10
-        baudrate=9600,
-        bytesize=serial.SEVENBITS,
-        stopbits=serial.STOPBITS_ONE,
-        parity=serial.PARITY_EVEN,
-        timeout=1
+# Configuration du logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Constantes
+SERIAL_PORT = '/dev/ttyAMA0'
+BAUDRATE = 9600
+TELEGRAM_PREFIX = "OAL"
+TELEGRAM_FORMAT = "%y%m%dF%H%M%S"
+SLEEP_ON_CHANGE = 0.9
+SLEEP_ON_WAIT = 0.1
+
+def initialize_serial():
+    """Initialise la connexion série avec gestion d'erreur."""
+    try:
+        ser = serial.Serial(
+            port=SERIAL_PORT,
+            baudrate=BAUDRATE,
+            bytesize=serial.SEVENBITS,
+            stopbits=serial.STOPBITS_ONE,
+            parity=serial.PARITY_EVEN,
+            timeout=1
         )
-print(f"Connected to {ser.name}")
+        logger.info(f"Connecté à {ser.name}")
+        return ser
+    except serial.SerialException as e:
+        logger.error(f"Erreur lors de la connexion au port série: {e}")
+        sys.exit(1)
 
-
-s1 = 0 # S1 = 0, pour comapraison avec S0
-
-while True:
-    #s0 = time.strftime("%-S")
-    s0 = datetime.datetime.now() # defini S0 à l'heure actuelle
-    # print("s0 = ", s0.strftime("%S.%f"), ", s0 = ", s0) #debug
-    print("s0 = ",s0.strftime("%-S.%f") ," s1 = ", s1) # debug
+def send_telegram(ser, timestamp):
+    """Crée et envoie un télégrame sur le port série.
     
-    # si la seconde actuelle (s0)  n'est pas égale à la seconde enregistrée en fin
-    # de boucle (s1), la seconde à changé, on entre dans la boucle. Si la seconde est 
-    # identique, on ne refait pas un télegramme et on attends un dixième de seconde.
-    if s0.strftime("%-S") != s1:
+    Args:
+        ser: Objet serial.Serial
+        timestamp: datetime.datetime
+    """
+    # Création du télégrame
+    telegram = TELEGRAM_PREFIX + timestamp.strftime(TELEGRAM_FORMAT) + "\r"
+    telegram_encoded = telegram.encode(encoding='ascii')
+    
+    try:
+        ser.write(telegram_encoded)
+        logger.debug(f"Télégrame envoyé: {telegram_encoded}, hex: {telegram_encoded.hex()}")
+    except serial.SerialException as e:
+        logger.error(f"Erreur lors de l'envoi du télégrame: {e}")
 
-        # creation du telegrame
-        tgrm = "OAL" + s0.strftime("%y%m%dF%H%M%S") + "\r"
+def main():
+    """Boucle principale de synchronisation."""
+    ser = initialize_serial()
+    last_second = None
+    
+    try:
+        while True:
+            current_time = datetime.datetime.now()
+            current_second = current_time.strftime("%-S")
+            
+            # Envoyer un télégrame si la seconde a changé
+            if current_second != last_second:
+                send_telegram(ser, current_time)
+                last_second = current_second
+                time.sleep(SLEEP_ON_CHANGE)
+            else:
+                time.sleep(SLEEP_ON_WAIT)
+                
+    except KeyboardInterrupt:
+        logger.info("Arrêt du programme par l'utilisateur")
+    except Exception as e:
+        logger.error(f"Erreur inattendue: {e}")
+    finally:
+        if ser.is_open:
+            ser.close()
+            logger.info("Port série fermé")
 
-        tgrm_encoded = tgrm.encode(encoding='ascii') # encodage
-
-        tgrm_hex = tgrm_encoded.hex() #encodage pour debug
-        print("telegram ascii : ", tgrm_encoded, ", hex : ", tgrm_hex) # affiche pour debug
-        
-        ser.write(tgrm_encoded) # envoyer sur port série
-
-        s1 = s0.strftime("%-S") # defini s1 pour comparaison avec s0
-        time.sleep(.9) 
-    else:
-        time.sleep(.1) # attente un dixième de seconde
-        
+if __name__ == "__main__":
+    main()
