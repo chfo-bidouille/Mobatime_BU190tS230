@@ -58,7 +58,7 @@ def send_telegram(ser, timestamp):
     
     try:
         ser.write(telegram_encoded)
-        logger.debug(f"Télégrame envoyé: {telegram_encoded}, hex: {telegram_encoded.hex()}")
+        logger.info(f"Télégrame envoyé: {telegram_encoded}, hex: {telegram_encoded.hex()}")
     except serial.SerialException as e:
         logger.error(f"Erreur lors de l'envoi du télégrame: {e}")
 
