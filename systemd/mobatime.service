@@ -1,0 +1,14 @@
+[Unit]
+Description=Horloge CFF
+After=multi-user.target
+ 
+[Service]
+Type=simple
+WorkingDirectory=/home/dietpi/
+User=dietpi
+ExecStart=/usr/bin/python3 /home/dietpi/topBouton.py
+Restart=on-failure
+TimeoutStopSec=60
+ 
+[Install]
+WantedBy=multi-user.target
