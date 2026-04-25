@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Synchronisation d'une horloge Mobatime BU190(t) S 230 avec un Raspberry PI
+
 Created on Mon Feb  9 08:44:43 2026
 
 @author: christophe
@@ -9,6 +11,15 @@ Created on Mon Feb  9 08:44:43 2026
 import time
 import datetime
 import serial
+import logging
+import sys
+
+# Configuration du logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 ser = serial.Serial(
         port='/dev/ttyAMA0', # /dev/ttyAMA0 ou /dev/ttyAMA10
@@ -18,21 +29,14 @@ ser = serial.Serial(
         parity=serial.PARITY_EVEN,
         timeout=1
         )
-print(f"Connected to {ser.name}")
+logger.info(f"Connecté à {ser.name}")
+# print(f"Connected to {ser.name}")
 
-
-# s1 = 0 # S1 = 0, pour comapraison avec S0
 
 while True:
-    #s0 = time.strftime("%-S")
-    s0 = datetime.datetime.now() # defini S0 à l'heure actuelle
-    # print("s0 = ", s0.strftime("%S.%f"), ", s0 = ", s0) #debug
-    #print("s0 = ",s0.strftime("%-S.%f") ," s1 = ", s1) # debug
 
-    # si la seconde actuelle (s0)  n'est pas égale à la seconde enregistrée en fin
-    # de boucle (s1), la seconde à changé, on entre dans la boucle. Si la seconde est 
-    # identique, on ne refait pas un télegramme et on attends un dixième de seconde.
-    # if s0.strftime("%-S") != s1:
+    s0 = datetime.datetime.now() # defini S0 à l'heure actuelle
+
     # creation du telegrame
     tgrm = "OAL" + s0.strftime("%y%m%dF%H%M%S") + "\r"
 
@@ -44,8 +48,4 @@ while True:
 
     ser.write(tgrm_encoded) # envoyer sur port série
 
-    # s1 = s0.strftime("%-S") # defini s1 pour comparaison avec s0
     time.sleep(60) 
-    #else:
-    # time.sleep(.1) # attente un dixième de seconde
-
