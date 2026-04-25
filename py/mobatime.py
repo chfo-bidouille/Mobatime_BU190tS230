@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Synchronisation d'une horloge Mobatime BU190(t) S 230 avec un Raspberry PI
-
 Created on Mon Feb  9 08:44:43 2026
 
 @author: christophe
@@ -11,108 +9,43 @@ Created on Mon Feb  9 08:44:43 2026
 import time
 import datetime
 import serial
-import logging
-import sys
-import signal
 
-# Configuration du logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Configuration des constantes
-SERIAL_PORT = '/dev/ttyAMA0'  # /dev/ttyAMA0 ou /dev/ttyAMA10
-BAUD_RATE = 9600
-SEND_INTERVAL = 60  # secondes
-TELEGRAM_PREFIX = "OAL"
-EXPECTED_TELEGRAM_LENGTH = 21  # "OAL" (3) + date/heure (14) + "\r" (1) + "F" (1) = 20 + 1 padding
+ser = serial.Serial(
+        port='/dev/ttyAMA0', # /dev/ttyAMA0 ou /dev/ttyAMA10
+        baudrate=9600,
+        bytesize=serial.SEVENBITS,
+        stopbits=serial.STOPBITS_ONE,
+        parity=serial.PARITY_EVEN,
+        timeout=1
+        )
+print(f"Connected to {ser.name}")
 
 
-def signal_handler(sig, frame):
-    """Gestionnaire d'arrêt gracieux du programme."""
-    logger.info("Arrêt du programme...")
-    sys.exit(0)
+# s1 = 0 # S1 = 0, pour comapraison avec S0
 
+while True:
+    #s0 = time.strftime("%-S")
+    s0 = datetime.datetime.now() # defini S0 à l'heure actuelle
+    # print("s0 = ", s0.strftime("%S.%f"), ", s0 = ", s0) #debug
+    #print("s0 = ",s0.strftime("%-S.%f") ," s1 = ", s1) # debug
 
-def create_telegram(timestamp):
-    """
-    Crée un télégrame au format Mobatime.
-    
-    Args:
-        timestamp: objet datetime
-        
-    Returns:
-        str: télégrame au format "OAL" + YYMMDDFhhmmss + "\r"
-    """
-    tgrm = TELEGRAM_PREFIX + timestamp.strftime("%y%m%dF%H%M%S") + "\r"
-    return tgrm
+    # si la seconde actuelle (s0)  n'est pas égale à la seconde enregistrée en fin
+    # de boucle (s1), la seconde à changé, on entre dans la boucle. Si la seconde est 
+    # identique, on ne refait pas un télegramme et on attends un dixième de seconde.
+    # if s0.strftime("%-S") != s1:
+    # creation du telegrame
+    tgrm = "OAL" + s0.strftime("%y%m%dF%H%M%S") + "\r"
 
+    tgrm_encoded = tgrm.encode(encoding='ascii') # encodage
 
-def main():
-    """Fonction principale."""
-    # Configuration du gestionnaire de signal pour Ctrl+C
-    signal.signal(signal.SIGINT, signal_handler)
-    
-    try:
-        # Ouverture du port série avec context manager
-        with serial.Serial(
-            port=SERIAL_PORT,
-            baudrate=BAUD_RATE,
-            bytesize=serial.SEVENBITS,
-            stopbits=serial.STOPBITS_ONE,
-            parity=serial.PARITY_EVEN,
-            timeout=1
-        ) as ser:
-            if not ser.is_open:
-                logger.error("Le port série ne s'est pas ouvert correctement")
-                sys.exit(1)
-            
-            logger.info(f"Connecté à {ser.name}")
-            
-            while True:
-                try:
-                    # Récupère l'heure actuelle
-                    s0 = datetime.datetime.now()
-                    
-                    # Crée le télégrame
-                    tgrm = create_telegram(s0)
-                    
-                    # Valide la longueur du télégrame
-                    if len(tgrm) != EXPECTED_TELEGRAM_LENGTH:
-                        logger.warning(f"Longueur inattendue du télégrame: {len(tgrm)} (attendu: {EXPECTED_TELEGRAM_LENGTH})")
-                    
-                    # Encode en ASCII
-                    tgrm_encoded = tgrm.encode(encoding='ascii')
-                    
-                    # Affiche pour debug
-                    logger.debug(f"Télégrame envoyé: {tgrm_encoded}")
-                    
-                    # Envoie sur le port série
-                    ser.write(tgrm_encoded)
-                    logger.info(f"Télégrame envoyé: {tgrm.strip()}")
-                    
-                    # Attends avant le prochain envoi
-                    time.sleep(SEND_INTERVAL)
-                    
-                except serial.SerialException as e:
-                    logger.error(f"Erreur lors de l'écriture sur le port série: {e}")
-                    time.sleep(5)  # Attends 5 secondes avant de réessayer
-                except UnicodeEncodeError as e:
-                    logger.error(f"Erreur d'encodage: {e}")
-                    
-    except serial.SerialException as e:
-        logger.error(f"Erreur lors de l'ouverture du port série: {e}")
-        logger.error(f"Vérifiez que le port {SERIAL_PORT} existe et est accessible")
-        sys.exit(1)
-    except KeyboardInterrupt:
-        logger.info("Interruption utilisateur détectée")
-        sys.exit(0)
-    except Exception as e:
-        logger.error(f"Erreur inattendue: {e}")
-        sys.exit(1)
+    # tgrm_hex = tgrm_encoded.hex() #encodage pour debug
+    print(datetime.datetime.now(), " : telegram ascii : ", tgrm_encoded) # affiche pour debug
+    # print("telegram ascii : ", tgrm_encoded, ", hex : ", tgrm_hex) # affiche pour debug
 
+    ser.write(tgrm_encoded) # envoyer sur port série
 
-if __name__ == "__main__":
-    main()
+    # s1 = s0.strftime("%-S") # defini s1 pour comparaison avec s0
+    time.sleep(60) 
+    #else:
+    # time.sleep(.1) # attente un dixième de seconde
+
