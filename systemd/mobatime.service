@@ -1,12 +1,12 @@
 [Unit]
-Description=Horloge CFF
+Description=Horloge Mobatime
 After=multi-user.target
  
 [Service]
 Type=simple
-WorkingDirectory=/home/dietpi/
+WorkingDirectory=/home/dietpi/mobatime
 User=dietpi
-ExecStart=/usr/bin/python3 /home/dietpi/topBouton.py
+ExecStart=/usr/bin/python3 /home/dietpi/mobatime/mobatime.py
 Restart=on-failure
 TimeoutStopSec=60
  
