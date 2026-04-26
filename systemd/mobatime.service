@@ -1,9 +1,9 @@
 [Unit]
-Description=Horloge Mobatime
+Description=Synchronisation d Horloge Mobatime
 After=multi-user.target
  
 [Service]
-Type=simple
+Type=oneshot
 WorkingDirectory=/home/dietpi/mobatime
 User=dietpi
 ExecStart=/usr/bin/python3 /home/dietpi/mobatime/mobatime.py

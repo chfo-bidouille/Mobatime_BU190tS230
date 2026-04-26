@@ -1,0 +1,10 @@
+[Unit]
+Descritpion=Timer de synchronisation de l horloge Mobatime
+
+[Timer]
+OnBootSec=2min
+OnCalendar=*-*-* *:59:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
