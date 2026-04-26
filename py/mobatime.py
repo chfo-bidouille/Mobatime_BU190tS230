@@ -20,18 +20,15 @@ ser = serial.Serial(
         )
 print(f"Connected to {ser.name}")
 
-while True:
-    s0 = datetime.datetime.now() # defini S0 à l'heure actuelle
+s0 = datetime.datetime.now() # defini S0 à l'heure actuelle
 
-    # creation du telegrame
-    tgrm = "OAL" + s0.strftime("%y%m%dF%H%M%S") + "\r"
+# creation du telegrame
+tgrm = "OAL" + s0.strftime("%y%m%dF%H%M%S") + "\r"
 
-    tgrm_encoded = tgrm.encode(encoding='ascii') # encodage
+tgrm_encoded = tgrm.encode(encoding='ascii') # encodage
 
-    # tgrm_hex = tgrm_encoded.hex() #encodage pour debug
-    print(datetime.datetime.now(), " : telegram ascii : ", tgrm_encoded) # affiche pour debug
-    # print("telegram ascii : ", tgrm_encoded, ", hex : ", tgrm_hex) # affiche pour debug
+# tgrm_hex = tgrm_encoded.hex() #encodage pour debug
+print(datetime.datetime.now(), " : telegram ascii : ", tgrm_encoded) # affiche pour debug
+# print("telegram ascii : ", tgrm_encoded, ", hex : ", tgrm_hex) # affiche pour debug
 
-    ser.write(tgrm_encoded) # envoyer sur port série
-
-    time.sleep(60) 
+ser.write(tgrm_encoded) # envoyer sur port série
