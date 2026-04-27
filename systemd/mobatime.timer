@@ -1,9 +1,9 @@
 [Unit]
-Descritpion=Timer de synchronisation de l horloge Mobatime
+Descritpion=Timer de synchronisation de l\'horloge Mobatime
 
 [Timer]
 OnBootSec=2min
-OnCalendar=*-*-* *:59:00
+OnCalendar=*-*-* *:10,25,40,55:00
 Persistent=true
 
 [Install]
