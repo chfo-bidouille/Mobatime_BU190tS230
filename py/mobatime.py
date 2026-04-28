@@ -10,7 +10,7 @@ import time
 import datetime
 import serial
 
-ser = serial.Serial( # ouvrir et configurer le port séri
+ser = serial.Serial( # ouvrir et configurer le port série
         port='/dev/ttyAMA0', # /dev/ttyAMA0 ou /dev/ttyAMA10
         baudrate=9600,
         bytesize=serial.SEVENBITS,
@@ -18,37 +18,27 @@ ser = serial.Serial( # ouvrir et configurer le port séri
         parity=serial.PARITY_EVEN,
         timeout=1
         )
-print(f"Connected to {ser.name}")
+print(f"Connecté à {ser.name}")
 
 '''
 Attendre l'heure exacte 
+
+attend ( 100000 - "le nombre de microsecondes actuelles" / 100000) = attend le nombre de 
+microsecondes jusqu'au début de la seconde suivante
 '''
-now = datetime.datetime.now() # heure actuelle exacte
-micro = int(now.strftime("%f")) # microseconde actuelle
-
-# print(micro)
-
-# combien de microsecondes à attendre avant la seconde suivante, converti en seconde, pour avoir "seconde,000000"
-wait = (1000000-micro) / 1000000
-
-# print(wait)
-
-time.sleep(wait) # attend le nombre de microsecondes nécessaire (converti en seconde)
+time.sleep((1000000-int(datetime.datetime.now().strftime("%f"))) / 1000000)
 
 '''
 Création et envoi du télégramme
+
+tgrm = le télégramme
+ser.write = encode le télégramme en ascii et envoie sur le port série
+ser.close = ferme le port série
 '''
-h = datetime.datetime.now() # defini h à l'heure actuelle
+tgrm = "OAL" + datetime.datetime.now().strftime("%y%m%dF%H%M%S") + "\r"
+ser.write(tgrm.encode(encoding='ascii'))
 
-# creation du telegrame
-tgrm = "OAL" + h.strftime("%y%m%dF%H%M%S") + "\r"
+print(datetime.datetime.now(), ": télégramme envoyé = ", tgrm.encode(encoding='ascii'))
 
-tgrm_encoded = tgrm.encode(encoding='ascii') # encodage
-
-ser.write(tgrm_encoded) # envoyer sur port série
-
-# tgrm_hex = tgrm_encoded.hex() #encodage pour debug
-# print("telegram ascii : ", tgrm_encoded, ", hex : ", tgrm_hex) # affiche pour debug
-print(datetime.datetime.now(), " : telegram ascii : ", tgrm_encoded) # affiche le télégramme envoyé
-
-ser.close() # fermer le port série
+ser.close()
+print(f"Connection à {ser.name} fermée")
