@@ -1,5 +1,5 @@
 [Unit]
-Description=Synchronisation d Horloge Mobatime
+Description="Synchronisation de l'horloge Mobatime"
 After=multi-user.target
  
 [Service]
