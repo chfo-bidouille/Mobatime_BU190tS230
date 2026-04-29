@@ -34,9 +34,8 @@ Attendre l'heure exacte
 
 attend ( 100000 - "le nombre de microsecondes actuelles" / 100000) = attend le nombre de 
 microsecondes jusqu'au début de la seconde suivante
-(utilse 999900 pour compenser le temps d'execution du programme (~100 - 150 microsecondes))
 '''
-time.sleep((999900-int(datetime.datetime.now().strftime("%f"))) / 1000000)
+time.sleep((1000000-int(datetime.datetime.now().strftime("%f"))) / 1000000)
 
 '''
 Création et envoi du télégramme
@@ -48,7 +47,8 @@ ser.close = ferme le port série
 h = datetime.datetime.now()
 ser.write(h.strftime("OAL%y%m%dF%H%M%S\r").encode(encoding='ascii'))
 
-print(h, ": télégramme envoyé")
+#print(h.strftime("%H:%M:%S,%f"), ": télégramme Mobatime envoyé [",h.strftime("OAL%y%m%dF%H%M%S\r").encode(encoding='ascii'),"]")
+print("Télégramme Mobatime [",h.strftime("OAL%y%m%dF%H%M%S\r").encode(encoding='ascii'),"] envoyé à :",h.strftime("%H:%M:%S,%f"))
 
 ser.close()
 print(f"Connection à {ser.name} fermée")
