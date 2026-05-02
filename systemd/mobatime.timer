@@ -3,7 +3,7 @@ Description="Timer de synchronisation de l'horloge Mobatime"
 
 [Timer]
 OnBootSec=2min
-OnCalendar=*-*-* *:13,28,43,58:00
+OnCalendar=*-*-* *:01:00
 Persistent=true
 
 [Install]
