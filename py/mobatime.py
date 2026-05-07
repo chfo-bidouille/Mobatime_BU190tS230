@@ -35,15 +35,16 @@ Un seul télégramme différent n'est pas pris en compte
 (situation au changement d'heure été/hiver)
 '''
 i = 0
-while i < 5:
+while i < 3:
 
     '''
     Attendre l'heure exacte 
 
-    attend ( 100000 - "le nombre de microsecondes actuelles" / 100000) = attend le nombre de 
-    microsecondes jusqu'au début de la seconde suivante
+    attend ( 100000 - "le nombre de microsecondes actuelles" - 100 / 100000) = attend le nombre de 
+    microsecondes jusqu'au début de la seconde suivante - 80 microsecondes pourtenir compte du 
+    temps d'exécution et être un peut plus précis
     '''
-    time.sleep((1000000-int(datetime.now().strftime("%f"))) / 1000000)
+    time.sleep((1000000 - int(datetime.now().strftime("%f")) - 80) / 1000000)
 
     '''
     Création et envoi du télégramme
